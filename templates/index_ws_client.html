@@ -1,0 +1,320 @@
+<!-- Template that is used as a base to this code is taken from:
+https://github.com/PacktPublishing/Practical-Python-Programming-for-IoT/tree/master/chapter03 -->
+<!DOCTYPE html>
+<html>
+
+<head>
+  <title>Smart Home System</title>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+  <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.16.0/umd/popper.min.js"></script>
+  <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+  <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.7.0/css/all.css"
+    integrity="sha384-lZN37f5QGtY3VHgisS14W3ExzMWZxybE1SJSEsQp9S+oqd12jhcu+A56Ebc1zFSJ" crossorigin="anonymous">
+
+  <style>
+    .fas {
+      color: black;
+    }
+
+    .card-deck {
+      margin-left: 10px;
+      margin-right: 10px;
+      margin-bottom: 20px;
+    }
+
+    .switch {
+      position: relative;
+      display: inline-block;
+      width: 60px;
+      height: 34px;
+    }
+
+    .switch input {
+      opacity: 0;
+      width: 0;
+      height: 0;
+    }
+
+    .slider {
+      position: absolute;
+      cursor: pointer;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background-color: #ccc;
+      -webkit-transition: .4s;
+      transition: .4s;
+    }
+
+    .slider:before {
+      position: absolute;
+      content: "";
+      height: 26px;
+      width: 26px;
+      left: 4px;
+      bottom: 4px;
+      background-color: white;
+      -webkit-transition: .4s;
+      transition: .4s;
+    }
+
+    input:checked+.slider {
+      background-color: #2196F3;
+    }
+
+    input:focus+.slider {
+      box-shadow: 0 0 1px #2196F3;
+    }
+
+    input:checked+.slider:before {
+      -webkit-transform: translateX(26px);
+      -ms-transform: translateX(26px);
+      transform: translateX(26px);
+    }
+
+    /* Rounded sliders */
+    .slider.round {
+      border-radius: 34px;
+    }
+
+    .slider.round:before {
+      border-radius: 50%;
+    }
+  </style>
+
+  <script src="/static/jquery.min.js"></script>
+  <script src="/static/socket.io.js"></script>
+
+  <script type="text/javascript">
+
+    var socket = io();
+
+    socket.on('connect', function () {
+      console.log("Connected to Server");
+      $("#connected").html("Yes");
+    });
+
+    socket.on('disconnect', function () {
+      console.log("Disconnected from the Server");
+      $("#connected").html("No");
+    });
+
+    //Takes value from server for dht.
+    socket.on('dht', function (dataFromServer) {
+      console.log(dataFromServer)
+      document.getElementById("dhtValue").innerHTML = "Current Temperature: " + dataFromServer.state + "°C";
+    });
+    
+    //Takes value from server for Door 
+    socket.on('door', function (dataFromServer) {
+      console.log(dataFromServer)
+      if (dataFromServer.state !== undefined) {
+        $("input[type=checkbox].one").val(dataFromServer.state);
+      }
+      if(parseInt(dataFromServer.state)==1){
+        document.getElementById("doorSwitch").checked = true;
+      }else{
+        document.getElementById("doorSwitch").checked = false;
+      }
+    });
+  
+    //Takes value from server for relay1.
+    socket.on('relay1', function (dataFromServer) {
+      console.log(dataFromServer)
+      if (dataFromServer.state !== undefined) {
+        $("input[type=checkbox].one").val(dataFromServer.state);
+      }
+      if(parseInt(dataFromServer.state)==1){
+        document.getElementById("switchOne").checked = true;
+      }else{
+        document.getElementById("switchOne").checked = false;
+      }
+    });
+
+    //Takes value from server for relay2.
+    socket.on('relay2', function (dataFromServer) {
+      console.log(dataFromServer)
+      if (dataFromServer.state !== undefined) {
+        $("input[type=checkbox].two").val(dataFromServer.state);
+      }
+      if(parseInt(dataFromServer.state)==1){
+        document.getElementById("switchTwo").checked = true;
+      }else{
+        document.getElementById("switchTwo").checked = false;
+      }
+    });
+
+
+    //--------------------------------------------------------------------------------------------------//
+    
+    
+    //Sends value to the server for door.
+    $(document).ready(function () {
+      // Event listener for value changes.
+      $("input[type=checkbox].doorClass").on('click', function () {
+        if (document.getElementById("doorSwitch").checked == true) {
+          state = "1";
+          payload = { "state": state };
+          socket.emit('door', payload);
+        } else {
+          state = "0";
+          payload = { "state": state };
+          socket.emit('door', payload);
+        }
+      });
+    });
+
+    //Sends value to the server for relay1.
+    $(document).ready(function () {
+      // Event listener for value changes.
+      $("input[type=checkbox].one").on('click', function () {
+        if (document.getElementById("switchOne").checked == true) {
+          state = "1";
+          payload = { "state": state };
+          socket.emit('relay1', payload);
+        } else {
+          state = "0";
+          payload = { "state": state };
+          socket.emit('relay1', payload);
+        }
+      });
+    });
+
+    //Sends value to the server for relay2.
+    $(document).ready(function () {
+      // Event listener for value changes.
+      $("input[type=checkbox].two").on('click', function () {
+        if (document.getElementById("switchTwo").checked == true) {
+          state = "1";
+          payload = { "state": state };
+          socket.emit('relay2', payload);
+        } else {
+          state = "0";
+          payload = { "state": state };
+          socket.emit('relay2', payload);
+        }
+      });
+    });
+  </script>
+</head>
+
+<body>
+  <div class="jumbotron text-center">
+    <h1>Smart Home System</h1>
+  </div>
+  <br>
+  <div class="card-deck">
+    <div class="card">
+      <div class="card-body text-center">
+        <i class="fas fa-temperature-high fa-4x"></i>
+        <p class="card-text">Temperature</p>
+        <hr>
+        <p id="dhtValue" style="font-size: xx-large;"></p>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-body text-center">
+        <i class="fas fa-door-closed fa-4x"></i>
+        <p class="card-text">Exterior Door</p>
+        <hr>
+        <p>Door Status: Locked</p>
+        <label class="switch"> <input type="checkbox" class="doorClass" id="doorSwitch"> <span class="slider round"></span> </label>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-body text-center">
+        <i class="fas fa-couch fa-4x"></i>
+        <p class="card-text">Living Room</p>
+        <hr>
+        <p>Lights</p> 
+        <label class="switch"> <input type="checkbox" class="one" id="switchOne"> <span class="slider round"></span> </label>
+        <br>
+        <p>TV</p> 
+        <label class="switch"> <input type="checkbox" class="two" id="switchTwo"> <span class="slider round"></span> </label>
+      </div>
+    </div>
+  </div>
+  <br>
+  <div class="card-deck">
+    <div class="card">
+      <div class="card-body text-center">
+        <i class="fas fa-utensils fa-4x"></i>
+        <p class="card-text">Kitchen</p>
+        <hr>
+        <p>Lights</p> 
+        <label class="switch"> <input type="checkbox"> <span class="slider round"></span> </label>
+        <br>
+        <p>Device One</p> 
+        <label class="switch"> <input type="checkbox"> <span class="slider round"></span> </label>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-body text-center">
+        <i class="fas fa-bed fa-4x"></i>
+        <p class="card-text">Master Bedroom</p>
+        <hr>
+        <p>Lights</p> 
+        <label class="switch"> <input type="checkbox"> <span class="slider round"></span> </label>
+        <br>
+        <p>Curtains</p> 
+        <label class="switch"> <input type="checkbox"> <span class="slider round"></span> </label>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-body text-center">
+        <i class="fas fa-child fa-4x"></i>
+        <p class="card-text">Kids Room</p>
+        <hr>
+        <p>Lights</p> 
+        <label class="switch"> <input type="checkbox"> <span class="slider round"></span> </label>
+        <br>
+        <p>Curtains</p> 
+        <label class="switch"> <input type="checkbox"> <span class="slider round"></span> </label>
+      </div>
+    </div>
+  </div>
+  <br>
+  <div class="card-deck">
+    <div class="card">
+      <div class="card-body text-center">
+        <i class="fas fa-bath fa-4x"></i>
+        <p class="card-text">Bathroom</p>
+        <hr>
+        <p>Lights</p> 
+        <label class="switch"> <input type="checkbox"> <span class="slider round"></span> </label>
+        <br>
+        <p>Mirror Light</p> 
+        <label class="switch"> <input type="checkbox"> <span class="slider round"></span> </label>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-body text-center">
+        <i class="fas fa-toilet-paper fa-4x"></i>
+        <p class="card-text">Restroom</p>
+        <hr>
+        <p>Lights</p> 
+        <label class="switch"> <input type="checkbox"> <span class="slider round"></span> </label>
+        <br>
+        <p>Mirror Light</p> 
+        <label class="switch"> <input type="checkbox"> <span class="slider round"></span> </label>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-body text-center">
+        <i class="fas fa-car fa-4x"></i>
+        <p class="card-text">Garage</p>
+        <hr>
+        <p>Lights</p> 
+        <label class="switch"> <input type="checkbox"> <span class="slider round"></span> </label>
+        <br>
+        <p>Garage Doors</p> 
+        <label class="switch"> <input type="checkbox"> <span class="slider round"></span> </label>
+      </div>
+    </div>
+  </div>
+</body>
+</html>
